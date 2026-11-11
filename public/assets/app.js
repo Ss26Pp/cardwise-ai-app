@@ -46342,7 +46342,10 @@ var BC = [
             : cwOver > 0
               ? `Pay down your current balance first so the purchase fits within your available credit.`
               : `Pay the full ${cwFmt(cwTotal)} by the due date to keep this purchase interest-free.`;
+      // Distinct key: React must not reuse the Purchase Advisor DOM (which the
+      // decorative layer augments with card visuals) for this view.
       return (0, $.jsxs)(`div`, {
+        key: `cw-repayment-view`,
         className: `space-y-6`,
         children: [
           le(
@@ -46545,10 +46548,10 @@ var BC = [
                     : (0, $.jsxs)($.Fragment, {
                         children: [
                           (0, $.jsxs)(`div`, {
-                            className: `bg-[#0F1420] rounded-2xl border border-[#243049] p-6 shadow-md text-[#EEF2FA] space-y-4`,
+                            className: `bg-[#0F1420] rounded-2xl border border-[#243049] p-6 shadow-md text-[#EEF2FA] space-y-5`,
                             children: [
                               (0, $.jsxs)(`div`, {
-                                className: `flex items-center justify-between pb-3 border-b border-[#243049]`,
+                                className: `flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#243049]`,
                                 children: [
                                   (0, $.jsxs)(`div`, {
                                     className: `flex items-center gap-2`,
@@ -46584,7 +46587,7 @@ var BC = [
                                 className: `grid grid-cols-2 sm:grid-cols-4 gap-3`,
                                 children: [
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#93A0B8] text-[10px] font-semibold mb-1`,
@@ -46598,7 +46601,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-white`,
+                                        className: `text-base sm:text-lg font-black text-white truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.currentOutstanding.toLocaleString(
@@ -46609,7 +46612,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#10241C] border border-[#3E9C74] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#10241C] border border-[#3E9C74] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#8CD3B0] text-[10px] font-semibold mb-1`,
@@ -46623,7 +46626,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-[#8CD3B0]`,
+                                        className: `text-base sm:text-lg font-black text-[#8CD3B0] truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.availableCreditAfter.toLocaleString(
@@ -46634,7 +46637,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#93A0B8] text-[10px] font-semibold mb-1`,
@@ -46648,7 +46651,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-white`,
+                                        className: `text-base sm:text-lg font-black text-white truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.updatedOutstanding.toLocaleString(
@@ -46659,7 +46662,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#2A1E10] border border-[#D98A3D] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#2A1E10] border border-[#D98A3D] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#E9A15B] text-[10px] font-semibold mb-1`,
@@ -46673,7 +46676,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-[#E9A15B]`,
+                                        className: `text-base sm:text-lg font-black text-[#E9A15B] truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.estimatedRepaymentAmount.toLocaleString(
@@ -46696,7 +46699,7 @@ var BC = [
                                     className: `flex flex-col sm:flex-row sm:items-center justify-between gap-2`,
                                     children: [
                                       (0, $.jsxs)(`span`, {
-                                        className: `font-bold text-white text-sm flex items-center gap-2`,
+                                        className: `font-bold text-white text-sm flex items-center gap-2 min-w-0`,
                                         children: [
                                           (0, $.jsx)(dC, {
                                             className: `w-4 h-4 text-[#8DB4FF] shrink-0`,
