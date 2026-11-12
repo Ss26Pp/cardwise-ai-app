@@ -45992,10 +45992,12 @@ var BC = [
       [c, l] = (0, _.useState)(``),
       // Numeric inputs are held as the raw text the user typed so that empty,
       // zero and negative values can be validated instead of silently coerced.
-      [u, d] = (0, _.useState)(`4500`),
-      [f, p] = (0, _.useState)(`Amazon`),
-      [m, h] = (0, _.useState)(`Online Shopping`),
-      [g, v] = (0, _.useState)(() => e.map((e) => e.id)),
+      // Purchase details start empty; the user must enter them and click
+      // Analyze & Recommend before any recommendation is calculated.
+      [u, d] = (0, _.useState)(``),
+      [f, p] = (0, _.useState)(``),
+      [m, h] = (0, _.useState)(``),
+      [g, v] = (0, _.useState)(() => []),
       [y, b] = (0, _.useState)(!1),
       [ee, te] = (0, _.useState)(`5000`),
       [ne, re] = (0, _.useState)(s?.preferences?.isAmazonPrime ?? !0),
@@ -46297,8 +46299,55 @@ var BC = [
       let t = S?.repaymentSummary,
         n = Math.min(100, Math.max(0, t?.newUtilizationPercent ?? 0)),
         r =
-          n <= 30 ? `bg-[#8CD3B0]` : n <= 60 ? `bg-[#E9A15B]` : `bg-[#E5837D]`;
+          n <= 30 ? `bg-[#8CD3B0]` : n <= 60 ? `bg-[#E9A15B]` : `bg-[#E5837D]`,
+        // Repayment summary: unpaid amount is measured against the full
+        // post-purchase total (existing balance + this purchase).
+        cwFmt = (e) =>
+          `₹${(Number(e) || 0).toLocaleString(`en-IN`, { maximumFractionDigits: 2 })}`,
+        cwFmt2 = (e) =>
+          `₹${(Number(e) || 0).toLocaleString(`en-IN`, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        cwCur = t?.currentOutstanding ?? 0,
+        cwBuy = t?.purchaseAmount ?? 0,
+        cwTotal = t?.updatedOutstanding ?? 0,
+        cwCap = Math.max(0, Number(t?.comfortableRepayAmount) || 0),
+        cwUnpaid = Math.max(0, cwTotal - cwCap),
+        cwRate = t?.interestMonthlyPercent ?? 0,
+        cwInterestAmt = Math.round(cwUnpaid * cwRate) / 100,
+        cwOver = t ? Math.max(0, -(t.availableCreditAfter || 0)) : 0,
+        cwAdvice =
+          cwOver > 0 || cwUnpaid > cwBuy * 0.4
+            ? `consider_delaying`
+            : cwUnpaid > 0
+              ? `proceed_with_caution`
+              : t?.repaymentAdvice || `proceed`,
+        cwSummaryLine = t
+          ? (cwUnpaid > 0
+              ? `Your repayment capacity leaves ${cwFmt(cwUnpaid)} unpaid against the ${cwFmt(cwTotal)} post-purchase total.`
+              : `Your repayment capacity of ${cwFmt(cwCap)} fully covers the ${cwFmt(cwTotal)} post-purchase total.`) +
+            (cwOver > 0
+              ? ` This purchase also goes ${cwFmt(cwOver)} over your available credit.`
+              : ``)
+          : ``,
+        cwInterestText = t
+          ? (cwCur > 0
+              ? `Your existing balance of ${cwFmt(cwCur)} plus your planned purchase of ${cwFmt(cwBuy)} brings your total outstanding balance to ${cwFmt(cwTotal)}.`
+              : `Your planned purchase of ${cwFmt(cwBuy)} brings your total outstanding balance to ${cwFmt(cwTotal)}.`) +
+            (cwUnpaid > 0
+              ? ` Your repayment capacity is ${cwFmt(cwCap)}, leaving ${cwFmt(cwUnpaid)} unpaid. At the configured monthly interest rate of ${cwRate}%, carrying this unpaid amount for 30 days could result in approximately ${cwFmt2(cwInterestAmt)} in interest before taxes and fees.`
+              : ` Your repayment capacity of ${cwFmt(cwCap)} covers this in full, so no interest should apply if you pay by the due date.`)
+          : ``,
+        cwTip =
+          cwUnpaid > 0
+            ? cwUnpaid <= cwBuy
+              ? `Consider reducing your purchase amount by ${cwFmt(cwUnpaid)} or arranging additional funds before the payment due date.`
+              : `Your existing balance already exceeds your repayment capacity. Consider postponing this purchase or arranging additional funds before the payment due date.`
+            : cwOver > 0
+              ? `Pay down your current balance first so the purchase fits within your available credit.`
+              : `Pay the full ${cwFmt(cwTotal)} by the due date to keep this purchase interest-free.`;
+      // Distinct key: React must not reuse the Purchase Advisor DOM (which the
+      // decorative layer augments with card visuals) for this view.
       return (0, $.jsxs)(`div`, {
+        key: `cw-repayment-view`,
         className: `space-y-6`,
         children: [
           le(
@@ -46501,10 +46550,10 @@ var BC = [
                     : (0, $.jsxs)($.Fragment, {
                         children: [
                           (0, $.jsxs)(`div`, {
-                            className: `bg-[#0F1420] rounded-2xl border border-[#243049] p-6 shadow-md text-[#EEF2FA] space-y-4`,
+                            className: `bg-[#0F1420] rounded-2xl border border-[#243049] p-6 shadow-md text-[#EEF2FA] space-y-5`,
                             children: [
                               (0, $.jsxs)(`div`, {
-                                className: `flex items-center justify-between pb-3 border-b border-[#243049]`,
+                                className: `flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#243049]`,
                                 children: [
                                   (0, $.jsxs)(`div`, {
                                     className: `flex items-center gap-2`,
@@ -46519,19 +46568,16 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`span`, {
-                                    className: `inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${S.repaymentSummary.repaymentAdvice === `proceed` ? `bg-[#8CD3B0]/20 text-[#8CD3B0] border border-[#8CD3B0]/40` : S.repaymentSummary.repaymentAdvice === `proceed_with_caution` ? `bg-[#E9A15B]/20 text-[#E9A15B] border border-[#E9A15B]/40` : `bg-[#E5837D]/20 text-[#E5837D] border border-[#E5837D]/40`}`,
+                                    className: `inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${cwAdvice === `proceed` ? `bg-[#8CD3B0]/20 text-[#8CD3B0] border border-[#8CD3B0]/40` : cwAdvice === `proceed_with_caution` ? `bg-[#E9A15B]/20 text-[#E9A15B] border border-[#E9A15B]/40` : `bg-[#E5837D]/20 text-[#E5837D] border border-[#E5837D]/40`}`,
                                     children: [
                                       (0, $.jsx)(iC, {
                                         className: `w-3.5 h-3.5`,
                                       }),
                                       (0, $.jsx)(`span`, {
                                         children:
-                                          S.repaymentSummary.repaymentAdvice ===
-                                          `proceed`
+                                          cwAdvice === `proceed`
                                             ? `Proceed with Purchase`
-                                            : S.repaymentSummary
-                                                  .repaymentAdvice ===
-                                                `proceed_with_caution`
+                                            : cwAdvice === `proceed_with_caution`
                                               ? `Proceed with Caution`
                                               : `Consider Delaying Purchase`,
                                       }),
@@ -46539,16 +46585,11 @@ var BC = [
                                   }),
                                 ],
                               }),
-                              (0, $.jsx)(`p`, {
-                                className: `text-xs text-[#93A0B8] font-medium`,
-                                children:
-                                  S.repaymentSummary.repaymentAdviceExplanation,
-                              }),
                               (0, $.jsxs)(`div`, {
                                 className: `grid grid-cols-2 sm:grid-cols-4 gap-3`,
                                 children: [
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#93A0B8] text-[10px] font-semibold mb-1`,
@@ -46562,7 +46603,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-white`,
+                                        className: `text-base sm:text-lg font-black text-white truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.currentOutstanding.toLocaleString(
@@ -46573,7 +46614,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#10241C] border border-[#3E9C74] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#10241C] border border-[#3E9C74] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#8CD3B0] text-[10px] font-semibold mb-1`,
@@ -46587,7 +46628,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-[#8CD3B0]`,
+                                        className: `text-base sm:text-lg font-black text-[#8CD3B0] truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.availableCreditAfter.toLocaleString(
@@ -46598,7 +46639,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#1A2133] border border-[#243049] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#93A0B8] text-[10px] font-semibold mb-1`,
@@ -46612,7 +46653,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-white`,
+                                        className: `text-base sm:text-lg font-black text-white truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.updatedOutstanding.toLocaleString(
@@ -46623,7 +46664,7 @@ var BC = [
                                     ],
                                   }),
                                   (0, $.jsxs)(`div`, {
-                                    className: `p-3 rounded-xl bg-[#2A1E10] border border-[#D98A3D] text-xs`,
+                                    className: `min-w-0 p-3 rounded-xl bg-[#2A1E10] border border-[#D98A3D] text-xs`,
                                     children: [
                                       (0, $.jsxs)(`div`, {
                                         className: `flex items-center gap-1.5 text-[#E9A15B] text-[10px] font-semibold mb-1`,
@@ -46637,7 +46678,7 @@ var BC = [
                                         ],
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base sm:text-lg font-black text-[#E9A15B]`,
+                                        className: `text-base sm:text-lg font-black text-[#E9A15B] truncate`,
                                         children: [
                                           `₹`,
                                           S.repaymentSummary.estimatedRepaymentAmount.toLocaleString(
@@ -46649,43 +46690,64 @@ var BC = [
                                   }),
                                 ],
                               }),
+                              (0, $.jsx)(`p`, {
+                                className: `text-sm text-white font-medium leading-relaxed`,
+                                children: cwSummaryLine,
+                              }),
                               (0, $.jsxs)(`div`, {
-                                className: `p-3.5 rounded-xl bg-[#151B2A] border border-[#243049] text-xs space-y-1`,
+                                className: `p-4 rounded-xl bg-[#151B2A] border border-[#243049] space-y-3`,
                                 children: [
                                   (0, $.jsxs)(`div`, {
-                                    className: `flex items-center justify-between flex-wrap gap-2`,
+                                    className: `flex flex-col sm:flex-row sm:items-center justify-between gap-2`,
                                     children: [
                                       (0, $.jsxs)(`span`, {
-                                        className: `font-semibold text-white flex items-center gap-1.5`,
+                                        className: `font-bold text-white text-sm flex items-center gap-2 min-w-0`,
                                         children: [
                                           (0, $.jsx)(dC, {
-                                            className: `w-3.5 h-3.5 text-[#8DB4FF]`,
+                                            className: `w-4 h-4 text-[#8DB4FF] shrink-0`,
                                           }),
                                           `Potential Interest / Finance Charges`,
                                         ],
                                       }),
-                                      (0, $.jsx)(`span`, {
-                                        className: `font-bold text-[#8CD3B0]`,
-                                        children: S.repaymentSummary
-                                          .canRepayInFull
-                                          ? `₹0 (If paid in full by due date)`
-                                          : `~₹${S.repaymentSummary.revolvingInterestEstimateInr?.toLocaleString(`en-IN`)}/mo on deficit (estimate)`,
+                                      (0, $.jsxs)(`div`, {
+                                        className: `flex items-center gap-2 shrink-0`,
+                                        children: [
+                                          (0, $.jsx)(`span`, {
+                                            className: `text-[10px] font-semibold uppercase tracking-wider text-[#93A0B8]`,
+                                            children:
+                                              cwUnpaid > 0 ? `Est. 30 days` : `If paid in full`,
+                                          }),
+                                          (0, $.jsx)(`span`, {
+                                            className: `text-xl font-black whitespace-nowrap ${cwUnpaid > 0 ? `text-[#E9A15B]` : `text-[#8CD3B0]`}`,
+                                            children:
+                                              cwUnpaid > 0
+                                                ? `≈ ${cwFmt2(cwInterestAmt)}`
+                                                : `₹0`,
+                                          }),
+                                        ],
                                       }),
                                     ],
                                   }),
                                   (0, $.jsx)(`p`, {
-                                    className: `text-[11px] text-[#93A0B8] leading-normal`,
+                                    className: `text-xs text-[#93A0B8] leading-relaxed`,
+                                    children: cwInterestText,
+                                  }),
+                                  (0, $.jsxs)(`div`, {
+                                    className: `pt-3 border-t border-[#243049] text-xs leading-relaxed space-y-1`,
                                     children: [
-                                      (0, $.jsx)(`span`, {
-                                        className: `inline-block mr-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${S.repaymentSummary.interestRateVerified ? `bg-[#8CD3B0]/20 text-[#8CD3B0] border border-[#8CD3B0]/40` : `bg-[#E9A15B]/20 text-[#E9A15B] border border-[#E9A15B]/40`}`,
-                                        children: S.repaymentSummary
-                                          .interestRateVerified
-                                          ? `Issuer-verified rate`
-                                          : `Estimated rate`,
+                                      (0, $.jsx)(`div`, {
+                                        className: `text-[10px] font-bold uppercase tracking-wider text-[#8DB4FF]`,
+                                        children: `Recommendation`,
                                       }),
-                                      S.repaymentSummary
-                                        .interestVerificationNotice,
+                                      (0, $.jsx)(`p`, {
+                                        className: `text-white font-medium`,
+                                        children: cwTip,
+                                      }),
                                     ],
+                                  }),
+                                  (0, $.jsx)(`p`, {
+                                    className: `text-[11px] text-[#93A0B8] italic`,
+                                    children: `Interest is illustrative. Actual charges depend on your card's terms and payment history.`,
                                   }),
                                 ],
                               }),
@@ -46748,13 +46810,10 @@ var BC = [
                                         children: `Repayment Shortfall`,
                                       }),
                                       (0, $.jsxs)(`div`, {
-                                        className: `text-base font-bold ${t.affordabilityDeficit > 0 ? `text-[#E5837D]` : `text-[#8CD3B0]`}`,
+                                        className: `text-base font-bold ${cwUnpaid > 0 ? `text-[#E5837D]` : `text-[#8CD3B0]`}`,
                                         children: [
                                           `₹`,
-                                          Math.max(
-                                            0,
-                                            t.affordabilityDeficit,
-                                          ).toLocaleString(`en-IN`),
+                                          cwUnpaid.toLocaleString(`en-IN`),
                                         ],
                                       }),
                                     ],
@@ -46849,7 +46908,7 @@ var BC = [
                           min: `1`,
                           value: u,
                           onChange: (e) => d(e.target.value),
-                          placeholder: `4500`,
+                          placeholder: `Enter purchase amount`,
                           className: `w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#1A2133] border border-[#243049] text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-[#4F8CFF] focus:border-[#4F8CFF]`,
                         }),
                       ],
@@ -46910,17 +46969,29 @@ var BC = [
                           value: m,
                           onChange: (e) => h(e.target.value),
                           className: `w-full px-3.5 py-2.5 rounded-xl bg-[#1A2133] border border-[#243049] text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-[#4F8CFF] appearance-none pr-8 cursor-pointer`,
-                          children: BC.map((e) =>
+                          children: [
                             (0, $.jsx)(
                               `option`,
                               {
-                                value: e,
-                                className: `bg-[#0F1420] text-white`,
-                                children: e,
+                                value: ``,
+                                disabled: !0,
+                                className: `bg-[#0F1420] text-[#93A0B8]`,
+                                children: `Select a spending category`,
                               },
-                              e,
+                              `cw-placeholder`,
                             ),
-                          ),
+                            ...BC.map((e) =>
+                              (0, $.jsx)(
+                                `option`,
+                                {
+                                  value: e,
+                                  className: `bg-[#0F1420] text-white`,
+                                  children: e,
+                                },
+                                e,
+                              ),
+                            ),
+                          ],
                         }),
                         (0, $.jsx)(tC, {
                           className: `w-4 h-4 text-[#93A0B8] absolute right-3 top-3 pointer-events-none`,

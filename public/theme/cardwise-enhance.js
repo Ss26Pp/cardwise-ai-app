@@ -456,8 +456,29 @@
   }
 
   /* ---------------------------------------------------------------- scan */
+  /* React can reuse a decorated element for different markup (e.g. when the
+     shared Advisor/Repayment component switches views). Drop decorations
+     whose host is no longer a card so they can't spill over other content. */
+  function cleanupOrphans() {
+    document.querySelectorAll(".cw-layer").forEach(function (layer) {
+      var host = layer.parentElement;
+      if (host && !host.classList.contains("cw-card")) {
+        layer.remove();
+        ["data-cw-key", "data-finish", "data-holo", "data-logo"].forEach(function (a) { host.removeAttribute(a); });
+      }
+    });
+    document.querySelectorAll(".cw-deck").forEach(function (deck) {
+      var host = deck.parentElement;
+      if (host && !host.querySelector(":scope > .cw-rec")) {
+        deck.remove();
+        host.removeAttribute("data-cw-deck-host");
+      }
+    });
+  }
+
   function scan() {
     try {
+      cleanupOrphans();
       document.querySelectorAll("div.w-60.h-38").forEach(decorateHero);
       document.querySelectorAll("div.w-48.h-28").forEach(decorateRecommended);
       decorateCatalog();
