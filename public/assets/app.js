@@ -45992,10 +45992,12 @@ var BC = [
       [c, l] = (0, _.useState)(``),
       // Numeric inputs are held as the raw text the user typed so that empty,
       // zero and negative values can be validated instead of silently coerced.
-      [u, d] = (0, _.useState)(`4500`),
-      [f, p] = (0, _.useState)(`Amazon`),
-      [m, h] = (0, _.useState)(`Online Shopping`),
-      [g, v] = (0, _.useState)(() => e.map((e) => e.id)),
+      // Purchase details start empty; the user must enter them and click
+      // Analyze & Recommend before any recommendation is calculated.
+      [u, d] = (0, _.useState)(``),
+      [f, p] = (0, _.useState)(``),
+      [m, h] = (0, _.useState)(``),
+      [g, v] = (0, _.useState)(() => []),
       [y, b] = (0, _.useState)(!1),
       [ee, te] = (0, _.useState)(`5000`),
       [ne, re] = (0, _.useState)(s?.preferences?.isAmazonPrime ?? !0),
@@ -46906,7 +46908,7 @@ var BC = [
                           min: `1`,
                           value: u,
                           onChange: (e) => d(e.target.value),
-                          placeholder: `4500`,
+                          placeholder: `Enter purchase amount`,
                           className: `w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#1A2133] border border-[#243049] text-sm font-bold text-white focus:outline-hidden focus:ring-2 focus:ring-[#4F8CFF] focus:border-[#4F8CFF]`,
                         }),
                       ],
@@ -46967,17 +46969,29 @@ var BC = [
                           value: m,
                           onChange: (e) => h(e.target.value),
                           className: `w-full px-3.5 py-2.5 rounded-xl bg-[#1A2133] border border-[#243049] text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-[#4F8CFF] appearance-none pr-8 cursor-pointer`,
-                          children: BC.map((e) =>
+                          children: [
                             (0, $.jsx)(
                               `option`,
                               {
-                                value: e,
-                                className: `bg-[#0F1420] text-white`,
-                                children: e,
+                                value: ``,
+                                disabled: !0,
+                                className: `bg-[#0F1420] text-[#93A0B8]`,
+                                children: `Select a spending category`,
                               },
-                              e,
+                              `cw-placeholder`,
                             ),
-                          ),
+                            ...BC.map((e) =>
+                              (0, $.jsx)(
+                                `option`,
+                                {
+                                  value: e,
+                                  className: `bg-[#0F1420] text-white`,
+                                  children: e,
+                                },
+                                e,
+                              ),
+                            ),
+                          ],
                         }),
                         (0, $.jsx)(tC, {
                           className: `w-4 h-4 text-[#93A0B8] absolute right-3 top-3 pointer-events-none`,
